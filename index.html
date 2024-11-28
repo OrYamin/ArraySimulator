@@ -18,7 +18,6 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         h1 {
@@ -54,16 +53,6 @@
             font-size: 1.1rem;
             transition: transform 0.2s, background-color 0.2s;
             position: relative;
-        }
-
-        .array-container div.editable {
-            outline: none;
-            border: 2px dashed #2563eb;
-        }
-
-        .array-container div:hover {
-            transform: scale(1.1);
-            background-color: #60a5fa;
         }
 
         .array-container div .index {
@@ -129,7 +118,6 @@
     <div class="array-container" id="array-display"></div>
     <div class="input-container">
         <input type="number" id="number" placeholder="Enter number">
-        <input type="number" id="index" placeholder="Enter index (optional)">
         <select id="sort-algorithm">
             <option value="bubble">Bubble Sort</option>
             <option value="selection">Selection Sort</option>
@@ -142,12 +130,8 @@
     </div>
     <div class="input-container">
         <button onclick="insertNumber()">Insert</button>
-        <button onclick="removeByIndex()">Remove by Index</button>
-        <button onclick="removeNumber()">Remove by Value</button>
         <button onclick="animateSort()">Sort</button>
         <button onclick="pauseResumeSort()">Pause/Resume</button>
-        <button onclick="searchNumber()">Search</button>
-        <button onclick="getElement()">Get by Index</button>
     </div>
     <p id="feedback"></p>
 
@@ -162,9 +146,6 @@
             array.forEach((value, index) => {
                 const div = document.createElement("div");
                 div.innerText = value;
-                div.contentEditable = "true";
-                div.className = "editable";
-                div.addEventListener("blur", () => updateElement(index, div.innerText));
                 const indexLabel = document.createElement("div");
                 indexLabel.className = "index";
                 indexLabel.innerText = index;
@@ -173,7 +154,22 @@
             });
         };
 
-        const delay = (ms) => new Promise((resolve) => setTimeout(() => isPaused ? pauseResolve = resolve : resolve(), ms));
+        const delay = (ms) => new Promise(resolve => {
+            setTimeout(() => isPaused ? pauseResolve = resolve : resolve(), ms);
+        });
+
+        const pauseResumeSort = () => {
+            isPaused = !isPaused;
+            if (!isPaused && pauseResolve) pauseResolve();
+        };
+
+        const insertNumber = () => {
+            const num = parseInt(document.getElementById("number").value);
+            if (!isNaN(num)) {
+                array.push(num);
+                displayArray();
+            }
+        };
 
         const animateSort = () => {
             const algorithm = document.getElementById("sort-algorithm").value;
@@ -189,20 +185,128 @@
             }
         };
 
-        const pauseResumeSort = () => {
-            isPaused = !isPaused;
-            document.querySelector("button[onclick='pauseResumeSort()']").classList.toggle("paused");
-            if (!isPaused && pauseResolve) pauseResolve();
+        // Sorting Algorithms with Animation
+        const sortBubble = async (speed) => {
+            for (let i = 0; i < array.length - 1; i++) {
+                for (let j = 0; j < array.length - i - 1; j++) {
+                    if (array[j] > array[j + 1]) {
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        displayArray();
+                        await delay(speed);
+                    }
+                }
+            }
         };
 
-        const sortBubble = async (speed) => { /* Bubble Sort Implementation with Animations */ };
-        const sortSelection = async (speed) => { /* Selection Sort Implementation with Animations */ };
-        const sortQuick = async (low, high, speed) => { /* Quick Sort Implementation with Animations */ };
-        const sortInsertion = async (speed) => { /* Insertion Sort Implementation with Animations */ };
-        const sortMerge = async (low, high, speed) => { /* Merge Sort Implementation with Animations */ };
-        const sortHeap = async (speed) => { /* Heap Sort Implementation with Animations */ };
+        const sortSelection = async (speed) => {
+            for (let i = 0; i < array.length - 1; i++) {
+                let minIndex = i;
+                for (let j = i + 1; j < array.length; j++) {
+                    if (array[j] < array[minIndex]) minIndex = j;
+                }
+                [array[i], array[minIndex]] = [array[minIndex], array[i]];
+                displayArray();
+                await delay(speed);
+            }
+        };
 
-        displayArray();
+        const sortQuick = async (low, high, speed) => {
+            if (low < high) {
+                let pi = await partition(low, high, speed);
+                await sortQuick(low, pi - 1, speed);
+                await sortQuick(pi + 1, high, speed);
+            }
+        };
+
+        const partition = async (low, high, speed) => {
+            let pivot = array[high];
+            let i = low - 1;
+            for (let j = low; j < high; j++) {
+                if (array[j] < pivot) {
+                    i++;
+                    [array[i], array[j]] = [array[j], array[i]];
+                    displayArray();
+                    await delay(speed);
+                }
+            }
+            [array[i + 1], array[high]] = [array[high], array[i + 1]];
+            displayArray();
+            await delay(speed);
+            return i + 1;
+        };
+
+        const sortInsertion = async (speed) => {
+            for (let i = 1; i < array.length; i++) {
+                let key = array[i];
+                let j = i - 1;
+                while (j >= 0 && array[j] > key) {
+                    array[j + 1] = array[j];
+                    j--;
+                    displayArray();
+                    await delay(speed);
+                }
+                array[j + 1] = key;
+                displayArray();
+                await delay(speed);
+            }
+        };
+
+        const sortMerge = async (low, high, speed) => {
+            if (low < high) {
+                let mid = Math.floor((low + high) / 2);
+                await sortMerge(low, mid, speed);
+                await sortMerge(mid + 1, high, speed);
+                await merge(low, mid, high, speed);
+            }
+        };
+
+        const merge = async (low, mid, high, speed) => {
+            let left = array.slice(low, mid + 1);
+            let right = array.slice(mid + 1, high + 1);
+            let i = 0, j = 0, k = low;
+            while (i < left.length && j < right.length) {
+                if (left[i] <= right[j]) {
+                    array[k++] = left[i++];
+                } else {
+                    array[k++] = right[j++];
+                }
+                displayArray();
+                await delay(speed);
+            }
+            while (i < left.length) {
+                array[k++] = left[i++];
+                displayArray();
+                await delay(speed);
+            }
+            while (j < right.length) {
+                array[k++] = right[j++];
+                displayArray();
+                await delay(speed);
+            }
+        };
+
+        const sortHeap = async (speed) => {
+            const heapify = async (n, i) => {
+                let largest = i;
+                let left = 2 * i + 1;
+                let right = 2 * i + 2;
+                if (left < n && array[left] > array[largest]) largest = left;
+                if (right < n && array[right] > array[largest]) largest = right;
+                if (largest !== i) {
+                    [array[i], array[largest]] = [array[largest], array[i]];
+                    displayArray();
+                    await delay(speed);
+                    await heapify(n, largest);
+                }
+            };
+            for (let i = Math.floor(array.length / 2) - 1; i >= 0; i--) await heapify(array.length, i);
+            for (let i = array.length - 1; i > 0; i--) {
+                [array[0], array[i]] = [array[i], array[0]];
+                displayArray();
+                await delay(speed);
+                await heapify(i, 0);
+            }
+        };
     </script>
 </body>
 
