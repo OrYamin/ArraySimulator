@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Array Simulator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide-icons/0.321.0/font/lucide.min.css" rel="stylesheet">
     <style>
-        /* General Styles */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -22,24 +22,43 @@
             margin: 20px 0;
             font-size: 2.5rem;
             text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #random-icon {
+            color: #fbbf24;
+            cursor: pointer;
         }
         p#feedback {
             margin: 10px 0;
             font-size: 1.1rem;
             font-weight: bold;
         }
-
-        /* Array Container */
         .array-container {
             width: 90%;
             max-width: 800px;
             margin: 20px auto;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            overflow-x: auto;
             gap: 10px;
+            padding: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #60a5fa #1e293b;
         }
-        .array-container div {
+        .array-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .array-container::-webkit-scrollbar-thumb {
+            background-color: #60a5fa;
+            border-radius: 4px;
+        }
+        .array-element {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .array-element div {
             background-color: #3b82f6;
             border: 2px solid #2563eb;
             color: #fff;
@@ -48,17 +67,21 @@
             text-align: center;
             font-size: 1.1rem;
             transition: transform 0.2s, background-color 0.2s;
+            min-width: 50px;
         }
-        .array-container div.editable {
+        .array-element div.editable {
             outline: none;
             border: 2px dashed #2563eb;
         }
-        .array-container div:hover {
+        .array-element div:hover {
             transform: scale(1.1);
             background-color: #60a5fa;
         }
-
-        /* Input Container */
+        .array-element .index {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #a3e635;
+        }
         .input-container {
             display: flex;
             flex-wrap: wrap;
@@ -86,17 +109,16 @@
             background-color: #60a5fa;
             transform: scale(1.05);
         }
-
-        /* Feedback Section */
-        p#feedback {
-            font-size: 1.2rem;
-            margin-top: 15px;
-            color: #fbbf24;
+        #animation-speed {
+            width: 150px;
         }
     </style>
 </head>
 <body>
-    <h1>Advanced Integer Array Simulator</h1>
+    <h1>
+        Advanced Integer Array Simulator 
+        <i id="random-icon" class="lucide lucide-dice-5"></i>
+    </h1>
     <div class="array-container" id="array-display"></div>
     <div class="input-container">
         <input type="number" id="number" placeholder="Enter number">
@@ -104,7 +126,13 @@
         <select id="sort-algorithm">
             <option value="bubble">Bubble Sort</option>
             <option value="selection">Selection Sort</option>
+            <option value="quick">Quick Sort</option>
+            <option value="insertion">Insertion Sort</option>
+            <option value="merge">Merge Sort</option>
+            <option value="heap">Heap Sort</option>
         </select>
+        <input type="range" id="animation-speed" min="50" max="1000" value="200" step="50">
+        <span id="speed-label">Animation Speed: 200ms</span>
     </div>
     <div class="input-container">
         <button onclick="insertNumber()">Insert</button>
@@ -114,67 +142,176 @@
         <button onclick="searchNumber()">Search</button>
         <button onclick="getElement()">Get by Index</button>
     </div>
+    <div class="input-container">
+        <button onclick="pauseSort()" id="pause-btn">Pause</button>
+        <button onclick="resumeSort()" id="resume-btn" disabled>Resume</button>
+    </div>
     <p id="feedback"></p>
 
     <script>
         let array = [];
+        let sortPaused = false;
+        let currentSortAlgorithm = null;
 
-        const displayArray = () => {
+        const displayArray = (highlightIndices = []) => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
             array.forEach((value, index) => {
+                const elementWrapper = document.createElement("div");
+                elementWrapper.className = "array-element";
+
                 const div = document.createElement("div");
                 div.innerText = value;
                 div.contentEditable = "true";
                 div.className = "editable";
+                if (highlightIndices.includes(index)) {
+                    div.style.backgroundColor = "#22c55e"; // Highlight swapped elements in green
+                }
                 div.addEventListener("blur", () => updateElement(index, div.innerText));
-                display.appendChild(div);
+
+                const indexSpan = document.createElement("span");
+                indexSpan.innerText = index;
+                indexSpan.className = "index";
+
+                elementWrapper.appendChild(div);
+                elementWrapper.appendChild(indexSpan);
+                display.appendChild(elementWrapper);
             });
         };
 
-        const insertNumber = () => {
-            const number = parseInt(document.getElementById("number").value);
-            const index = parseInt(document.getElementById("index").value);
-            const feedback = document.getElementById("feedback");
+        const getAnimationSpeed = () => {
+            return parseInt(document.getElementById("animation-speed").value);
+        };
 
-            if (!isNaN(number)) {
-                if (!isNaN(index) && index >= 0) {
-                    array.splice(index, 0, number);
-                    feedback.innerText = Inserted ${number} at index ${index};
-                } else {
-                    array.push(number);
-                    feedback.innerText = Inserted ${number};
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        const quickSort = async (arr, low = 0, high = arr.length - 1) => {
+            if (low < high) {
+                const pivotIndex = await partition(arr, low, high);
+                await quickSort(arr, low, pivotIndex - 1);
+                await quickSort(arr, pivotIndex + 1, high);
+            }
+        };
+
+        const partition = async (arr, low, high) => {
+            const pivot = arr[high];
+            let i = low - 1;
+
+            for (let j = low; j < high; j++) {
+                if (arr[j] < pivot) {
+                    i++;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    displayArray([i, j]);
+                    await delay(getAnimationSpeed());
+                    if (sortPaused) await waitForResume();
                 }
-                displayArray();
-            } else {
-                feedback.innerText = "Invalid input! Enter a valid number.";
+            }
+
+            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+            displayArray([i + 1, high]);
+            await delay(getAnimationSpeed());
+            if (sortPaused) await waitForResume();
+            return i + 1;
+        };
+
+        const insertionSort = async () => {
+            for (let i = 1; i < array.length; i++) {
+                let key = array[i];
+                let j = i - 1;
+                while (j >= 0 && array[j] > key) {
+                    array[j + 1] = array[j];
+                    j--;
+                    displayArray([j + 1, j]);
+                    await delay(getAnimationSpeed());
+                    if (sortPaused) await waitForResume();
+                }
+                array[j + 1] = key;
+                displayArray([j + 1]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
             }
         };
 
-        const removeByIndex = () => {
-            const index = parseInt(document.getElementById("index").value);
-            const feedback = document.getElementById("feedback");
+        const mergeSort = async (arr = array, start = 0, end = arr.length - 1) => {
+            if (start >= end) return;
+            const mid = Math.floor((start + end) / 2);
+            await mergeSort(arr, start, mid);
+            await mergeSort(arr, mid + 1, end);
+            await merge(arr, start, mid, end);
+        };
 
-            if (!isNaN(index) && index >= 0 && index < array.length) {
-                const removed = array.splice(index, 1);
-                feedback.innerText = Removed ${removed} from index ${index};
-                displayArray();
-            } else {
-                feedback.innerText = "Invalid index!";
+        const merge = async (arr, start, mid, end) => {
+            const left = arr.slice(start, mid + 1);
+            const right = arr.slice(mid + 1, end + 1);
+            let i = 0, j = 0, k = start;
+
+            while (i < left.length && j < right.length) {
+                if (left[i] <= right[j]) {
+                    arr[k] = left[i];
+                    i++;
+                } else {
+                    arr[k] = right[j];
+                    j++;
+                }
+                displayArray([k]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
+                k++;
+            }
+
+            while (i < left.length) {
+                arr[k] = left[i];
+                displayArray([k]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
+                i++;
+                k++;
+            }
+
+            while (j < right.length) {
+                arr[k] = right[j];
+                displayArray([k]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
+                j++;
+                k++;
             }
         };
 
-        const removeNumber = () => {
-            const number = parseInt(document.getElementById("number").value);
-            const index = array.indexOf(number);
-            const feedback = document.getElementById("feedback");
+        const heapSort = async () => {
+            const n = array.length;
+            for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                await heapify(n, i);
+            }
 
-            if (index !== -1) {
-                array.splice(index, 1);
-                feedback.innerText = Removed ${number};
-                displayArray();
-            } else {
-                feedback.innerText = ${number} not found in the array.;
+            for (let i = n - 1; i > 0; i--) {
+                [array[0], array[i]] = [array[i], array[0]];
+                displayArray([0, i]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
+                await heapify(i, 0);
+            }
+        };
+
+        const heapify = async (n, i) => {
+            let largest = i;
+            const left = 2 * i + 1;
+            const right = 2 * i + 2;
+
+            if (left < n && array[left] > array[largest]) {
+                largest = left;
+            }
+
+            if (right < n && array[right] > array[largest]) {
+                largest = right;
+            }
+
+            if (largest !== i) {
+                [array[i], array[largest]] = [array[largest], array[i]];
+                displayArray([i, largest]);
+                await delay(getAnimationSpeed());
+                if (sortPaused) await waitForResume();
+                await heapify(n, largest);
             }
         };
 
@@ -183,8 +320,9 @@
                 for (let j = 0; j < array.length - i - 1; j++) {
                     if (array[j] > array[j + 1]) {
                         [array[j], array[j + 1]] = [array[j + 1], array[j]];
-                        displayArray();
-                        await delay(200);
+                        displayArray([j, j + 1]);
+                        await delay(getAnimationSpeed());
+                        if (sortPaused) await waitForResume();
                     }
                 }
             }
@@ -200,16 +338,100 @@
                 }
                 if (minIndex !== i) {
                     [array[i], array[minIndex]] = [array[minIndex], array[i]];
-                    displayArray();
-                    await delay(200);
+                    displayArray([i, minIndex]);
+                    await delay(getAnimationSpeed());
+                    if (sortPaused) await waitForResume();
                 }
             }
         };
 
-        const animateSort = () => {
+        const waitForResume = () => {
+            return new Promise(resolve => {
+                const resumeHandler = () => {
+                    sortPaused = false;
+                    document.getElementById('pause-btn').disabled = false;
+                    document.getElementById('resume-btn').disabled = true;
+                    document.removeEventListener('resume-sort', resumeHandler);
+                    resolve();
+                };
+                document.addEventListener('resume-sort', resumeHandler);
+            });
+        };
+
+        const animateSort = async () => {
             const algorithm = document.getElementById("sort-algorithm").value;
-            if (algorithm === "bubble") sortBubble();
-            else if (algorithm === "selection") sortSelection();
+            sortPaused = false;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('resume-btn').disabled = true;
+
+            try {
+                switch(algorithm) {
+                    case "bubble": await sortBubble(); break;
+                    case "selection": await sortSelection(); break;
+                    case "quick": await quickSort(array); break;
+                    case "insertion": await insertionSort(); break;
+                    case "merge": await mergeSort(); break;
+                    case "heap": await heapSort(); break;
+                }
+            } catch (error) {
+                console.error("Sort interrupted", error);
+            }
+        };
+
+        const pauseSort = () => {
+            sortPaused = true;
+            document.getElementById('pause-btn').disabled = true;
+            document.getElementById('resume-btn').disabled = false;
+        };
+
+        const resumeSort = () => {
+            document.dispatchEvent(new Event('resume-sort'));
+        };
+
+        const insertNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
+
+            if (!isNaN(number)) {
+                if (!isNaN(index) && index >= 0) {
+                    array.splice(index, 0, number);
+                    feedback.innerText = `Inserted ${number} at index ${index}`;
+                } else {
+                    array.push(number);
+                    feedback.innerText = `Inserted ${number}`;
+                }
+                displayArray();
+            } else {
+                feedback.innerText = "Invalid input! Enter a valid number.";
+            }
+        };
+
+        const removeByIndex = () => {
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
+
+            if (!isNaN(index) && index >= 0 && index < array.length) {
+                const removed = array.splice(index, 1);
+                feedback.innerText = `Removed ${removed} from index ${index}`;
+                displayArray();
+            } else {
+                feedback.innerText = "Invalid index!";
+            }
+        };
+
+        const removeNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = array.indexOf(number);
+            const feedback = document.getElementById("feedback");
+
+            if (index !== -1) {
+                array.splice(index, 1);
+                feedback.innerText = `Removed ${number}`;
+                displayArray();
+            } else {
+                feedback.innerText = `${number} not found in the array.`;
+            }
         };
 
         const updateElement = (index, value) => {
@@ -217,7 +439,8 @@
             const number = parseInt(value);
             if (!isNaN(number)) {
                 array[index] = number;
-                feedback.innerText = Updated index ${index} to ${number};
+                feedback.innerText = `Updated index ${index} to ${number}`;
+                displayArray();
             } else {
                 feedback.innerText = "Invalid number!";
             }
@@ -228,7 +451,7 @@
             const feedback = document.getElementById("feedback");
 
             if (!isNaN(index) && index >= 0 && index < array.length) {
-                feedback.innerText = Value at index ${index}: ${array[index]};
+                feedback.innerText = `Value at index ${index}: ${array[index]}`;
             } else {
                 feedback.innerText = "Invalid index!";
             }
@@ -240,13 +463,20 @@
             const feedback = document.getElementById("feedback");
 
             if (index !== -1) {
-                feedback.innerText = Found ${number} at index ${index};
+                feedback.innerText = `Found ${number} at index ${index}`;
             } else {
-                feedback.innerText = ${number} not found in the array.;
+                feedback.innerText = `${number} not found in the array.`;
             }
         };
 
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        document.getElementById('random-icon').addEventListener('click', () => {
+            const randomNum = Math.floor(Math.random() * 100);
+            document.getElementById('number').value = randomNum;
+        });
+
+        document.getElementById('animation-speed').addEventListener('input', (e) => {
+            document.getElementById('speed-label').innerText = `Animation Speed: ${e.target.value}ms`;
+        });
 
         displayArray();
     </script>
