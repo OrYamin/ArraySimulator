@@ -223,6 +223,29 @@
             }
         };
 
+        const getElement = () => {
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
+
+            if (!isNaN(index) && index >= 0 && index < array.length) {
+                feedback.innerText = `Value at index ${index}: ${array[index]}`;
+            } else {
+                feedback.innerText = "Invalid index!";
+            }
+        };
+
+        const searchNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = array.indexOf(number);
+            const feedback = document.getElementById("feedback");
+
+            if (index !== -1) {
+                feedback.innerText = `Found ${number} at index ${index}`;
+            } else {
+                feedback.innerText = `${number} not found in the array.`;
+            }
+        };
+
         const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
         displayArray();
