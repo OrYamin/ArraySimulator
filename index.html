@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Array Simulator</title>
-    <link rel="icon" href="https://example.com/icon.png" type="image/png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3208/3208771.png" type="image/png">
     <style>
         /* General Styles */
         body {
@@ -18,14 +17,13 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
-
         h1 {
             margin: 20px 0;
             font-size: 2.5rem;
             text-align: center;
         }
-
         p#feedback {
             margin: 10px 0;
             font-size: 1.1rem;
@@ -38,11 +36,10 @@
             max-width: 800px;
             margin: 20px auto;
             display: flex;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
-            overflow-x: auto;
         }
-
         .array-container div {
             background-color: #3b82f6;
             border: 2px solid #2563eb;
@@ -52,16 +49,22 @@
             text-align: center;
             font-size: 1.1rem;
             transition: transform 0.2s, background-color 0.2s;
-            position: relative;
+        }
+        .array-container div.editable {
+            outline: none;
+            border: 2px dashed #2563eb;
+        }
+        .array-container div:hover {
+            transform: scale(1.1);
+            background-color: #60a5fa;
         }
 
-        .array-container div .index {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.9rem;
-            color: #fbbf24;
+        /* Highlight Colors for Animation */
+        .highlight {
+            background-color: #fbbf24 !important;
+        }
+        .swap {
+            background-color: #ef4444 !important;
         }
 
         /* Input Container */
@@ -72,36 +75,25 @@
             justify-content: center;
             margin-top: 20px;
         }
-
-        input,
-        button,
-        select {
+        input, button, select {
             padding: 10px 15px;
             font-size: 1rem;
             border-radius: 8px;
             border: none;
             outline: none;
         }
-
         input {
             width: 150px;
         }
-
         button {
             background-color: #2563eb;
             color: #fff;
             cursor: pointer;
             transition: background-color 0.2s, transform 0.2s;
         }
-
         button:hover {
             background-color: #60a5fa;
             transform: scale(1.05);
-        }
-
-        button.paused {
-            background-color: #fbbf24;
-            color: #000;
         }
 
         /* Feedback Section */
@@ -112,79 +104,187 @@
         }
     </style>
 </head>
-
 <body>
     <h1>Advanced Integer Array Simulator</h1>
     <div class="array-container" id="array-display"></div>
     <div class="input-container">
         <input type="number" id="number" placeholder="Enter number">
+        <input type="number" id="index" placeholder="Enter index (optional)">
         <select id="sort-algorithm">
             <option value="bubble">Bubble Sort</option>
             <option value="selection">Selection Sort</option>
-            <option value="quick">Quick Sort</option>
             <option value="insertion">Insertion Sort</option>
+            <option value="quick">Quick Sort</option>
             <option value="merge">Merge Sort</option>
             <option value="heap">Heap Sort</option>
         </select>
-        <input type="range" id="speed" min="50" max="1000" value="200">
     </div>
     <div class="input-container">
         <button onclick="insertNumber()">Insert</button>
+        <button onclick="removeByIndex()">Remove by Index</button>
+        <button onclick="removeNumber()">Remove by Value</button>
         <button onclick="animateSort()">Sort</button>
         <button onclick="pauseResumeSort()">Pause/Resume</button>
+        <button onclick="searchNumber()">Search</button>
+        <button onclick="getElement()">Get by Index</button>
     </div>
     <p id="feedback"></p>
 
     <script>
         let array = [];
         let isPaused = false;
-        let pauseResolve = null;
 
+        const pauseResumeSort = () => {
+            isPaused = !isPaused;
+            document.querySelector("button[onclick='pauseResumeSort()']").classList.toggle("paused");
+            if (!isPaused && pauseResolve) pauseResolve();
+        };
+        
         const displayArray = () => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
             array.forEach((value, index) => {
                 const div = document.createElement("div");
                 div.innerText = value;
-                const indexLabel = document.createElement("div");
+                div.contentEditable = "true";
+                div.className = "editable";
+                div.addEventListener("blur", () => updateElement(index, div.innerText));
+
+                const indexLabel = document.createElement("span");
                 indexLabel.className = "index";
                 indexLabel.innerText = index;
+
                 div.appendChild(indexLabel);
                 display.appendChild(div);
             });
         };
 
-        const delay = (ms) => new Promise(resolve => {
-            setTimeout(() => isPaused ? pauseResolve = resolve : resolve(), ms);
-        });
+        const insertNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
 
-        const pauseResumeSort = () => {
-            isPaused = !isPaused;
-            if (!isPaused && pauseResolve) pauseResolve();
+            if (!isNaN(number)) {
+                if (!isNaN(index) && index >= 0) {
+                    array.splice(index, 0, number);
+                    feedback.innerText = Inserted ${number} at index ${index};
+                } else {
+                    array.push(number);
+                    feedback.innerText = Inserted ${number};
+                }
+                displayArray();
+            } else {
+                feedback.innerText = "Invalid input! Enter a valid number.";
+            }
         };
 
-        const insertNumber = () => {
-            const num = parseInt(document.getElementById("number").value);
-            if (!isNaN(num)) {
-                array.push(num);
+        const removeByIndex = () => {
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
+
+            if (!isNaN(index) && index >= 0 && index < array.length) {
+                const removed = array.splice(index, 1);
+                feedback.innerText = Removed ${removed} from index ${index};
                 displayArray();
+            } else {
+                feedback.innerText = "Invalid index!";
+            }
+        };
+
+        const removeNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = array.indexOf(number);
+            const feedback = document.getElementById("feedback");
+
+            if (index !== -1) {
+                array.splice(index, 1);
+                feedback.innerText = Removed ${number};
+                displayArray();
+            } else {
+                feedback.innerText = ${number} not found in the array.;
+            }
+        };
+
+        const sortBubble = async () => {
+            for (let i = 0; i < array.length - 1; i++) {
+                for (let j = 0; j < array.length - i - 1; j++) {
+                    if (array[j] > array[j + 1]) {
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        displayArray();
+                        await delay(200);
+                    }
+                }
+            }
+        };
+
+        const sortSelection = async () => {
+            for (let i = 0; i < array.length - 1; i++) {
+                let minIndex = i;
+                for (let j = i + 1; j < array.length; j++) {
+                    if (array[j] < array[minIndex]) {
+                        minIndex = j;
+                    }
+                }
+                if (minIndex !== i) {
+                    [array[i], array[minIndex]] = [array[minIndex], array[i]];
+                    displayArray();
+                    await delay(200);
+                }
             }
         };
 
         const animateSort = () => {
             const algorithm = document.getElementById("sort-algorithm").value;
-            const speed = parseInt(document.getElementById("speed").value);
-            switch (algorithm) {
-                case "bubble": sortBubble(speed); break;
-                case "selection": sortSelection(speed); break;
-                case "quick": sortQuick(0, array.length - 1, speed); break;
-                case "insertion": sortInsertion(speed); break;
-                case "merge": sortMerge(0, array.length - 1, speed); break;
-                case "heap": sortHeap(speed); break;
-                default: break;
+            if (algorithm === "bubble") sortBubble();
+            else if (algorithm === "selection") sortSelection();
+        };
+
+        const updateElement = (index, value) => {
+            const feedback = document.getElementById("feedback");
+            const number = parseInt(value);
+            if (!isNaN(number)) {
+                array[index] = number;
+                feedback.innerText = Updated index ${index} to ${number};
+            } else {
+                feedback.innerText = "Invalid number!";
             }
         };
 
+        const getElement = () => {
+            const index = parseInt(document.getElementById("index").value);
+            const feedback = document.getElementById("feedback");
+
+            if (!isNaN(index) && index >= 0 && index < array.length) {
+                feedback.innerText = Value at index ${index}: ${array[index]};
+            } else {
+                feedback.innerText = "Invalid index!";
+            }
+        };
+
+        const searchNumber = () => {
+            const number = parseInt(document.getElementById("number").value);
+            const index = array.indexOf(number);
+            const feedback = document.getElementById("feedback");
+
+            if (index !== -1) {
+                feedback.innerText = Found ${number} at index ${index};
+            } else {
+                feedback.innerText = ${number} not found in the array.;
+            }
+        };
+
+        const animateSwap = async (i, j, speed) => {
+            const elements = document.querySelectorAll(".array-container div");
+            elements[i].classList.add("swap");
+            elements[j].classList.add("swap");
+            await delay(speed);
+            elements[i].classList.remove("swap");
+            elements[j].classList.remove("swap");
+        };
+
+        const pauseAnimation = () => (isPaused = true);
+        const resumeAnimation = () => (isPaused = false);
+        
         // Sorting Algorithms with Animation
         const sortBubble = async (speed) => {
             for (let i = 0; i < array.length - 1; i++) {
@@ -307,7 +407,10 @@
                 await heapify(i, 0);
             }
         };
+
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        displayArray();
     </script>
 </body>
-
 </html>
