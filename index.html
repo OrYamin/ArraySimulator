@@ -243,7 +243,10 @@
                 const temp = array[draggedIndex];
                 array[draggedIndex] = array[targetIndex];
                 array[targetIndex] = temp;
-
+                console.log("array[draggedIndex]: " + array[draggedIndex]);
+                console.log("array[targetIndex]: " + array[targetIndex]);
+                console.log("targetIndex: " + targetIndex);
+                console.log("draggedIndex: " + draggedIndex);
                 // Redisplay the array
                 displayArray();
 
