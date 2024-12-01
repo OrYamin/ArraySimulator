@@ -145,6 +145,9 @@
     <div class="input-container">
         <button onclick="pauseSort()" id="pause-btn">Pause</button>
         <button onclick="resumeSort()" id="resume-btn" disabled>Resume</button>
+        <button onclick="clearArray()">Clear</button>
+        <button onclick="generateRandomArray()">Generate Random Array</button>
+        <button onclick="sortDescending()">Sort Descending</button>
     </div>
     <p id="feedback"></p>
 
@@ -179,6 +182,7 @@
             });
         };
 
+        // Previous sorting and array manipulation functions remain the same...
         const getAnimationSpeed = () => {
             return parseInt(document.getElementById("animation-speed").value);
         };
@@ -469,6 +473,39 @@
             }
         };
 
+        // New functions
+        const clearArray = () => {
+            array = [];
+            displayArray();
+            document.getElementById("feedback").innerText = "Array cleared";
+        };
+
+        const generateRandomArray = (count = 10) => {
+            array = Array.from({length: count}, () => Math.floor(Math.random() * 100));
+            displayArray();
+            document.getElementById("feedback").innerText = `Generated random array of ${count} elements`;
+        };
+
+        const sortDescending = async () => {
+            const algorithm = document.getElementById("sort-algorithm").value;
+            
+            // First, perform the selected sorting algorithm
+            switch(algorithm) {
+                case "bubble": await sortBubble(); break;
+                case "selection": await sortSelection(); break;
+                case "quick": await quickSort(array); break;
+                case "insertion": await insertionSort(); break;
+                case "merge": await mergeSort(); break;
+                case "heap": await heapSort(); break;
+            }
+
+            // Then reverse the array to make it descending
+            array.reverse();
+            displayArray();
+            document.getElementById("feedback").innerText = "Sorted in descending order";
+        };
+
+        // Existing event listeners from previous script
         document.getElementById('random-icon').addEventListener('click', () => {
             const randomNum = Math.floor(Math.random() * 100);
             document.getElementById('number').value = randomNum;
@@ -478,6 +515,7 @@
             document.getElementById('speed-label').innerText = `Animation Speed: ${e.target.value}ms`;
         });
 
+        // Initial display
         displayArray();
     </script>
 </body>
