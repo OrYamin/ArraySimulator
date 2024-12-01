@@ -171,7 +171,6 @@
             array.forEach((value, index) => {
                 const elementWrapper = document.createElement("div");
                 elementWrapper.className = "array-element";
-                // Make the wrapper draggable
                 elementWrapper.draggable = true;
 
                 const div = document.createElement("div");
@@ -180,7 +179,7 @@
                 div.className = "editable";
                 
                 if (highlightIndices.includes(index)) {
-                    div.style.backgroundColor = "#22c55e"; // Highlight swapped elements in green
+                    div.style.backgroundColor = "#22c55e";
                 }
 
                 div.addEventListener("blur", () => updateElement(index, div.innerText));
@@ -206,7 +205,7 @@
         function dragStart(e) {
             draggedElement = e.currentTarget;
             e.currentTarget.querySelector('div').classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', ''); // Required for Firefox
         }
 
         function dragEnd(e) {
@@ -219,7 +218,6 @@
         function dragOver(e) {
             e.preventDefault();
             e.currentTarget.classList.add('drag-over');
-            e.dataTransfer.dropEffect = 'move';
         }
 
         function dragLeave(e) {
@@ -241,16 +239,15 @@
                 const draggedIndex = Array.from(draggedElement.parentNode.children).indexOf(draggedElement);
                 const targetIndex = Array.from(targetElement.parentNode.children).indexOf(targetElement);
 
-                // Reorder the array
-                const [removed] = array.splice(draggedIndex, 1);
-                array.splice(targetIndex, 0, removed);
+                // Swap the elements in the array
+                [array[draggedIndex], array[targetIndex]] = [array[targetIndex], array[draggedIndex]];
 
                 // Redisplay the array
                 displayArray();
 
                 // Update feedback
                 document.getElementById("feedback").innerText = 
-                    `Moved element from index ${draggedIndex} to index ${targetIndex}`;
+                    `Swapped elements between index ${draggedIndex} and ${targetIndex}`;
             }
         }
 
