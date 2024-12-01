@@ -168,6 +168,8 @@
         const displayArray = (highlightIndices = []) => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
+            arrayContainer.innerHTML = '';
+            
             array.forEach((value, index) => {
                 const elementWrapper = document.createElement("div");
                 elementWrapper.className = "array-element";
