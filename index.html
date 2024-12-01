@@ -240,8 +240,9 @@
                 const targetIndex = Array.from(targetElement.parentNode.children).indexOf(targetElement);
 
                 // Swap the elements in the array
+                const temp = array[draggedIndex];
                 array[draggedIndex] = array[targetIndex];
-                array[targetIndex] = array[draggedIndex];
+                array[targetIndex] = temp;
 
                 // Redisplay the array
                 displayArray();
