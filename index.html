@@ -249,7 +249,9 @@
                 console.log("targetIndex: " + targetIndex);
                 console.log("draggedIndex: " + draggedIndex);
                 // Redisplay the array
-                displayArray();
+                draggedElement.innerText = array[draggedIndex];
+        targetElement.innerText = array[targetIndex];
+
 
                 // Update feedback
                 document.getElementById("feedback").innerText = 
