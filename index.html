@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advancedd Array Simulator</title>
+    <title>Advanced Array Simulator</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide-icons/0.321.0/font/lucide.min.css" rel="stylesheet">
     <style>
         body {
@@ -124,7 +124,7 @@
 </head>
 <body>
     <h1>
-        Advanced Integer Array Simulator 
+        Advancedd Integer Array Simulator 
         <i id="random-icon" class="lucide lucide-dice-5"></i>
     </h1>
     <div class="array-container" id="array-display"></div>
@@ -240,7 +240,9 @@
                 const targetIndex = Array.from(targetElement.parentNode.children).indexOf(targetElement);
 
                 // Swap the elements in the array
-                [array[draggedIndex], array[targetIndex]] = [array[draggedIndex], array[targetIndex]];
+                array[draggedIndex] = array[targetIndex];
+                array[targetIndex] = array[draggedIndex];
+            
                 console.log(draggedIndex + " " + targetIndex + " " + array[draggedIndex] + " " + array[targetIndex]);
                 // Redisplay the array
                 displayArray();
