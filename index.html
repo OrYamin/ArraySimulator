@@ -112,6 +112,24 @@
         #animation-speed {
             width: 150px;
         }
+        #controls {
+            margin: 20px 0;
+        }
+
+        #controls label,
+        #controls input,
+        #controls button {
+            margin-right: 10px;
+        }
+        .array-element.drag-over {
+            background-color: #60a5fa;
+        }
+        .array-element.dragging {
+            opacity: 0.5;
+        }
+        .array-element.drop-target {
+            border: 2px dashed #22c55e;
+        }
     </style>
 </head>
 <body>
@@ -149,28 +167,39 @@
         <button onclick="generateRandomArray()">Generate Random Array</button>
         <button onclick="sortDescending()">Sort Descending</button>
     </div>
+    <div id="controls">
+            <label for="index1">Index 1:</label>
+            <input type="number" id="index1" min="0">
+            <label for="index2">Index 2:</label>
+            <input type="number" id="index2" min="0">
+            <button id="swap-btn">Swap</button>
+        </div>
     <p id="feedback"></p>
 
     <script>
         let array = [];
         let sortPaused = false;
         let currentSortAlgorithm = null;
+        let dragIndex = null;
 
-        const displayArray = (highlightIndices = []) => {
+        const displayArray = () => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
+
             array.forEach((value, index) => {
                 const elementWrapper = document.createElement("div");
                 elementWrapper.className = "array-element";
+                elementWrapper.draggable = true; // Enable dragging
+                elementWrapper.dataset.index = index;
+
+                // Drag event listeners
+                elementWrapper.addEventListener("dragstart", (e) => onDragStart(e, index));
+                elementWrapper.addEventListener("dragover", (e) => onDragOver(e));
+                elementWrapper.addEventListener("dragleave", () => onDragLeave(elementWrapper));
+                elementWrapper.addEventListener("drop", (e) => onDrop(e, index));
 
                 const div = document.createElement("div");
                 div.innerText = value;
-                div.contentEditable = "true";
-                div.className = "editable";
-                if (highlightIndices.includes(index)) {
-                    div.style.backgroundColor = "#22c55e"; // Highlight swapped elements in green
-                }
-                div.addEventListener("blur", () => updateElement(index, div.innerText));
 
                 const indexSpan = document.createElement("span");
                 indexSpan.innerText = index;
@@ -180,6 +209,41 @@
                 elementWrapper.appendChild(indexSpan);
                 display.appendChild(elementWrapper);
             });
+        };
+
+        const onDragStart = (event, index) => {
+            dragIndex = index; // Save the index of the dragged element
+            event.dataTransfer.effectAllowed = "move";
+            event.target.classList.add("dragging");
+        };
+
+        const onDragOver = (event) => {
+            event.preventDefault(); // Allow dropping
+            event.target.closest(".array-element").classList.add("drop-target");
+        };
+
+        const onDragLeave = (element) => {
+            element.classList.remove("drop-target");
+        };
+
+        const onDrop = (event, dropIndex) => {
+            event.preventDefault();
+            const draggedValue = array[dragIndex];
+
+            // Remove the dragged element
+            array.splice(dragIndex, 1);
+
+            // Insert it at the new position
+            if (dragIndex < dropIndex) {
+                array.splice(dropIndex, 0, draggedValue);
+            } else {
+                array.splice(dropIndex + 1, 0, draggedValue);
+            }
+
+            // Reset styles and re-render the array
+            document.querySelectorAll(".drop-target").forEach((el) => el.classList.remove("drop-target"));
+            document.querySelectorAll(".dragging").forEach((el) => el.classList.remove("dragging"));
+            displayArray();
         };
 
         const getAnimationSpeed = () => {
@@ -513,6 +577,38 @@
 
         document.getElementById('animation-speed').addEventListener('input', (e) => {
             document.getElementById('speed-label').innerText = `Animation Speed: ${e.target.value}ms`;
+        });
+
+        const swapElements = (index1, index2) => {
+            if (
+                index1 < 0 || index1 >= array.length ||
+                index2 < 0 || index2 >= array.length
+            ) {
+                document.getElementById("feedback").innerText = "Indexes out of bounds!";
+                return;
+            }
+
+            // Swap the elements
+            const temp = array[index1];
+            array[index1] = array[index2];
+            array[index2] = temp;
+
+            // Refresh the display
+            displayArray();
+        };
+
+        // Attach event listener to the Swap button
+        document.getElementById("swap-btn").addEventListener("click", () => {
+            const index1 = parseInt(document.getElementById("index1").value, 10);
+            const index2 = parseInt(document.getElementById("index2").value, 10);
+
+            // Validate input
+            if (isNaN(index1) || isNaN(index2)) {
+                document.getElementById("feedback").innerText = "Please enter valid numbers for both indexes!";
+                return;
+            }
+
+            swapElements(index1, index2);
         });
 
         // Initial display
