@@ -107,6 +107,7 @@
         }
         button:hover {
             background-color: #60a5fa;
+            filter: brightness(0.9);
             transform: scale(1.05);
         }
         #animation-speed {
@@ -129,6 +130,11 @@
         }
         .array-element.drop-target {
             border: 2px dashed #22c55e;
+        }
+        .highlight {
+            border: 2px solid red;
+            transform: translateY(-10px);
+            transition: transform 0.2s, background-color 0.2s, border-color 0.2s; /* Smooth animation */
         }
     </style>
 </head>
@@ -164,7 +170,7 @@
         <button onclick="pauseSort()" id="pause-btn">Pause</button>
         <button onclick="resumeSort()" id="resume-btn" disabled>Resume</button>
         <button onclick="clearArray()">Clear</button>
-        <button onclick="generateRandomArray()">Generate Random Array</button>
+        <button onclick="openModal()">Generate Random Array</button>
         <button onclick="sortDescending()">Sort Descending</button>
     </div>
     <div id="controls">
@@ -174,6 +180,21 @@
             <input type="number" id="index2" min="0">
             <button id="swap-btn">Swap</button>
         </div>
+        <div id="custom-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); z-index: 1000; color: #1e293b; width: 90%; max-width: 400px;">
+            <p style="margin: 0 0 15px; font-size: 1.2rem; font-weight: bold; text-align: center;">Generate Random Array</p>
+            <p style="margin: 0 0 10px; text-align: center;">Enter the number of elements to generate:</p>
+            <input type="number" id="modal-input" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; width: calc(100% - 20px); margin: 0 auto 20px; display: block; font-size: 1rem; color: #1e293b;">
+            <div style="display: flex; justify-content: space-between;">
+                <button onclick="confirmModal()" style="flex: 1; margin-right: 10px; background-color: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
+                    Confirm
+                </button>
+                <button onclick="closeModal()" style="flex: 1; background-color: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+        <div id="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999;"></div>
+
     <p id="feedback"></p>
 
     <script>
@@ -182,13 +203,16 @@
         let currentSortAlgorithm = null;
         let dragIndex = null;
 
-        const displayArray = () => {
+        const displayArray = (highlightedIndices = []) => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
 
             array.forEach((value, index) => {
                 const elementWrapper = document.createElement("div");
                 elementWrapper.className = "array-element";
+                if (highlightedIndices.includes(index)) {
+                    elementWrapper.classList.add("highlight"); // Add a highlight class
+                }
                 elementWrapper.draggable = true; // Enable dragging
                 elementWrapper.dataset.index = index;
 
@@ -544,10 +568,26 @@
             document.getElementById("feedback").innerText = "Array cleared";
         };
 
-        const generateRandomArray = (count = 10) => {
-            array = Array.from({length: count}, () => Math.floor(Math.random() * 100));
+        const openModal = () => {
+            document.getElementById("custom-modal").style.display = "block";
+            document.getElementById("modal-overlay").style.display = "block";
+        };
+
+        const closeModal = () => {
+            document.getElementById("custom-modal").style.display = "none";
+            document.getElementById("modal-overlay").style.display = "none";
+        };
+
+        const confirmModal = () => {
+            const input = parseInt(document.getElementById("modal-input").value);
+            if (isNaN(input) || input <= 0) {
+                document.getElementById("feedback").innerText = "Invalid input! Please enter a positive number.";
+                return;
+            }
+            array = Array.from({ length: input }, () => Math.floor(Math.random() * 1000));
             displayArray();
-            document.getElementById("feedback").innerText = `Generated random array of ${count} elements`;
+            document.getElementById("feedback").innerText = `Generated random array of ${input} elements`;
+            closeModal();
         };
 
         const sortDescending = async () => {
