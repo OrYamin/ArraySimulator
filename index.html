@@ -430,7 +430,7 @@
         };
 
         const sortSelection = async () => {
-        const startTime = performance.now();
+            const startTime = performance.now();
             for (let i = 0; i < array.length - 1; i++) {
                 let minIndex = i;
                 for (let j = i + 1; j < array.length; j++) {
@@ -447,25 +447,41 @@
             document.getElementById("feedback").innerText = `Selection Sort completed in ${timeTaken} ms`;
         };
 
-        const animateSort = async () => {
-            const algorithm = document.getElementById("sort-algorithm").value;
-            showLoading();
+        const animateSort = () => {
+            const sortAlgorithm = document.getElementById("sort-algorithm").value;
 
-            try {
-                switch(algorithm) {
-                    case "bubble": await sortBubble(); break;
-                    case "selection": await sortSelection(); break;
-                    case "quick": await timedQuickSort(); break;
-                    case "insertion": await insertionSort(); break;
-                    case "merge": await timedMergeSort(); break;
-                    case "heap": await heapSort(); break;
+            // Show the loading overlay
+            showLoadingOverlay();
+
+            // Use a short timeout to allow the DOM to update
+            setTimeout(async () => {
+                switch (sortAlgorithm) {
+                    case "bubble":
+                        await sortBubble();
+                        break;
+                    case "quick":
+                        await timedQuickSort();
+                        break;
+                    case "insertion":
+                        await insertionSort();
+                        break;
+                    case "selection":
+                        await sortSelection();
+                        break;
+                    case "merge":
+                        await timedMergeSort();
+                        break;
+                    case "heap":
+                        await heapSort();
+                        break;
                 }
-            } catch (error) {
-                console.error("Sort interrupted", error);
-                hideLoading();
-            }
-            displayArray();
-            hideLoading();
+
+                // Hide the loading overlay after sorting completes
+                hideLoadingOverlay();
+
+                // Update the array display
+                displayArray();
+            }, 0);
         };
 
         const insertNumber = () => {
@@ -580,34 +596,52 @@
         const sortDescending = async () => {
             const algorithm = document.getElementById("sort-algorithm").value;
 
-            // First, perform the selected sorting algorithm
-            switch(algorithm) {
-                case "bubble": await sortBubble(); break;
-                case "selection": await sortSelection(); break;
-                case "quick": await quickSort(array); break;
-                case "insertion": await insertionSort(); break;
-                case "merge": await mergeSort(); break;
-                case "heap": await heapSort(); break;
-            }
+            // Show the loading overlay
+            showLoadingOverlay();
 
-            // Then reverse the array to make it descending
-            array.reverse();
-            displayArray();
+            // Perform the selected sorting algorithm
+            setTimeout(async () => {
+                switch (algorithm) {
+                    case "bubble":
+                        await sortBubble();
+                        break;
+                    case "quick":
+                        await timedQuickSort();
+                        break;
+                    case "insertion":
+                        await insertionSort();
+                        break;
+                    case "selection":
+                        await sortSelection();
+                        break;
+                    case "merge":
+                        await timedMergeSort();
+                        break;
+                    case "heap":
+                        await heapSort();
+                        break;
+                }
+
+                // Hide the loading overlay after sorting completes
+                hideLoadingOverlay();
+
+                // Update the array display
+                array.reverse();
+                displayArray();
+            }, 0);
         };
 
         // Show loading screen while sorting
-           const showLoading = () => {
-               console.log("Showing loading screen");
-               document.getElementById("loading-overlay").style.display = "flex";
-               await delay(100);
-               console.log(document.getElementById("loading-overlay").style.display);
+           const showLoadingOverlay = () => {
+               const overlay = document.getElementById("loading-overlay");
+               overlay.style.display = "flex";
+               overlay.offsetHeight; // Trigger reflow
            };
 
-           const hideLoading = () => {
-               console.log("Hiding loading screen");
-               document.getElementById("loading-overlay").style.display = "none";
-               await delay(100);
-               console.log(document.getElementById("loading-overlay").style.display);
+           const hideLoadingOverlay = () => {
+               const overlay = document.getElementById("loading-overlay");
+               overlay.style.display = "none";
+               overlay.offsetHeight;
            };
 
         // Existing event listeners from previous script
