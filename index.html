@@ -57,7 +57,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: move;
         }
         .array-element div {
             background-color: #3b82f6;
@@ -69,10 +68,6 @@
             font-size: 1.1rem;
             transition: transform 0.2s, background-color 0.2s;
             min-width: 50px;
-        }
-        .array-element div.dragging {
-            opacity: 0.5;
-            transform: scale(1.1);
         }
         .array-element div.editable {
             outline: none;
@@ -86,9 +81,6 @@
             margin-top: 5px;
             font-size: 0.8rem;
             color: #a3e635;
-        }
-        .drag-over {
-            border: 2px dashed #22c55e !important;
         }
         .input-container {
             display: flex;
@@ -124,7 +116,7 @@
 </head>
 <body>
     <h1>
-        Advanceddd Integer Array Simulator 
+        Advanced Integer Array Simulator
         <i id="random-icon" class="lucide lucide-dice-5"></i>
     </h1>
     <div class="array-container" id="array-display"></div>
@@ -163,34 +155,22 @@
         let array = [];
         let sortPaused = false;
         let currentSortAlgorithm = null;
-        let draggedElement = null;
 
         const displayArray = (highlightIndices = []) => {
             const display = document.getElementById("array-display");
             display.innerHTML = '';
-            
             array.forEach((value, index) => {
                 const elementWrapper = document.createElement("div");
                 elementWrapper.className = "array-element";
-                elementWrapper.draggable = true;
 
                 const div = document.createElement("div");
                 div.innerText = value;
                 div.contentEditable = "true";
                 div.className = "editable";
-                
                 if (highlightIndices.includes(index)) {
-                    div.style.backgroundColor = "#22c55e";
+                    div.style.backgroundColor = "#22c55e"; // Highlight swapped elements in green
                 }
-
                 div.addEventListener("blur", () => updateElement(index, div.innerText));
-
-                // Drag and Drop Event Listeners
-                elementWrapper.addEventListener('dragstart', dragStart);
-                elementWrapper.addEventListener('dragend', dragEnd);
-                elementWrapper.addEventListener('dragover', dragOver);
-                elementWrapper.addEventListener('dragleave', dragLeave);
-                elementWrapper.addEventListener('drop', drop);
 
                 const indexSpan = document.createElement("span");
                 indexSpan.innerText = index;
@@ -202,64 +182,6 @@
             });
         };
 
-        // Drag and Drop Functions
-        function dragStart(e) {
-            draggedElement = e.currentTarget;
-            e.currentTarget.querySelector('div').classList.add('dragging');
-            e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-        }
-
-        function dragEnd(e) {
-            e.currentTarget.querySelector('div').classList.remove('dragging');
-            document.querySelectorAll('.array-element').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-        }
-
-        function dragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        }
-
-        function dragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
-        }
-
-        function drop(e) {
-            e.preventDefault();
-            const targetElement = e.currentTarget;
-            
-            // Remove drag-over class
-            document.querySelectorAll('.array-element').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-
-            // If dragging to a different position
-            if (draggedElement !== targetElement) {
-                // Get indices
-                const draggedIndex = Array.from(draggedElement.parentNode.children).indexOf(draggedElement);
-                const targetIndex = Array.from(targetElement.parentNode.children).indexOf(targetElement);
-
-                // Swap the elements in the array
-                const temp = array[draggedIndex];
-                array[draggedIndex] = array[targetIndex];
-                array[targetIndex] = temp;
-                console.log("array[draggedIndex]: " + array[draggedIndex]);
-                console.log("array[targetIndex]: " + array[targetIndex]);
-                console.log("targetIndex: " + targetIndex);
-                console.log("draggedIndex: " + draggedIndex);
-                // Redisplay the array
-                draggedElement.innerText = array[draggedIndex];
-        targetElement.innerText = array[targetIndex];
-
-
-                // Update feedback
-                document.getElementById("feedback").innerText = 
-                    `Swapped elements between index ${draggedIndex} and ${targetIndex}`;
-            }
-        }
-
-        // Previous sorting and array manipulation functions remain the same...
         const getAnimationSpeed = () => {
             return parseInt(document.getElementById("animation-speed").value);
         };
@@ -550,7 +472,8 @@
             }
         };
 
-        // New functions
+
+
         const clearArray = () => {
             array = [];
             displayArray();
@@ -565,7 +488,7 @@
 
         const sortDescending = async () => {
             const algorithm = document.getElementById("sort-algorithm").value;
-            
+
             // First, perform the selected sorting algorithm
             switch(algorithm) {
                 case "bubble": await sortBubble(); break;
