@@ -698,6 +698,12 @@
             }
         });
 
+        document.getElementById('custom-modal').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                confirmModal();
+            }
+        });
+
         document.getElementById('index1').addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 const index1 = parseInt(document.getElementById("index1").value, 10);
