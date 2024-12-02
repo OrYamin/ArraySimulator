@@ -599,12 +599,14 @@
            const showLoading = () => {
                console.log("Showing loading screen");
                document.getElementById("loading-overlay").style.display = "flex";
+               await delay(100);
                console.log(document.getElementById("loading-overlay").style.display);
            };
 
            const hideLoading = () => {
                console.log("Hiding loading screen");
                document.getElementById("loading-overlay").style.display = "none";
+               await delay(100);
                console.log(document.getElementById("loading-overlay").style.display);
            };
 
