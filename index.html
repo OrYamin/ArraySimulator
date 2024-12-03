@@ -19,7 +19,7 @@
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -29,14 +29,15 @@
         }
         h1 {
             margin: 20px 0;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            text-shadow: 0px 0px 10px #00f260, 0px 0px 20px #0575e6;
+            color: #00f260;
         }
         h2 {
             margin: -10px 0;
+            color: #00f260;
+            text-shadow: 0px 0px 5px #0575e6;
         }
         #random-icon {
             color: #fbbf24;
@@ -50,19 +51,19 @@
         .array-container {
             width: 90%;
             max-width: 1400px;
-            margin: 60px auto;
+            margin: 40px auto;
             display: flex;
-            overflow-x: auto;
             gap: 10px;
+            overflow-x: auto;
             padding: 10px;
             scrollbar-width: thin;
-            scrollbar-color: #60a5fa #1e293b;
-        }
+            scrollbar-color: #ff6ec7 #0f2027;
+        } 
         .array-container::-webkit-scrollbar {
             height: 8px;
-        }
+        } 
         .array-container::-webkit-scrollbar-thumb {
-            background-color: #60a5fa;
+            background-color: #ff6ec7;
             border-radius: 4px;
         }
         .array-element {
@@ -71,28 +72,30 @@
             align-items: center;
         }
         .array-element div {
-            background-color: #3b82f6;
-            border: 2px solid #2563eb;
+            background-color: #0575e6;
+            border: 2px solid #00f260;
             color: #fff;
-            border-radius: 8px;
-            padding: 10px 15px;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1.2rem;
             text-align: center;
-            font-size: 1.1rem;
-            transition: transform 0.2s, background-color 0.2s;
-            min-width: 50px;
+            transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0px 0px 5px #0575e6;
+            min-width: 60px;
         }
         .array-element div.editable {
             outline: none;
             border: 2px dashed #2563eb;
         }
         .array-element div:hover {
-            transform: scale(1.1);
-            background-color: #60a5fa;
+            transform: scale(1.2);
+            background-color: #00f260;
+            box-shadow: 0px 0px 10px #00f260;
         }
         .array-element .index {
             margin-top: 5px;
             font-size: 0.8rem;
-            color: #a3e635;
+            color: #ff6ec7;
         }
         .input-container {
             display: flex;
@@ -108,8 +111,9 @@
            left: 0;
            width: 100%;
            height: 100%;
-           background: rgba(0, 0, 0, 0.6);
-           color: white;
+           background: rgba(15, 32, 39, 0.95);
+           color: #ff6ec7;
+           text-shadow: 0px 0px 10px #ff6ec7;
            font-size: 2rem;
            justify-content: center;
            align-items: center;
@@ -126,15 +130,20 @@
             width: 150px;
         }
         button {
-            background-color: #2563eb;
-            color: #fff;
+            background-color: #0575e6;
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
+            transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0px 0px 5px #00f260;
         }
         button:hover {
-            background-color: #60a5fa;
-            filter: brightness(0.9);
-            transform: scale(1.05);
+            background-color: #00f260;
+            box-shadow: 0px 0px 15px #00f260;
+            transform: scale(1.1);
         }
         #controls {
             margin: 20px 0;
@@ -199,15 +208,15 @@
         <label for="index2">Index 2:</label>
         <input type="number" id="index2" min="0">
     </div>
-    <div id="custom-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); z-index: 1000; color: #1e293b; width: 90%; max-width: 400px;">
+    <div id="custom-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 32, 39, 0.95); padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); z-index: 1000; font-size: 2rem; text-shadow: 0px 0px 10px #ff6ec7; color: #ff6ec7; width: 90%; max-width: 400px;">
         <p style="margin: 0 0 15px; font-size: 1.2rem; font-weight: bold; text-align: center;">Generate Random Array</p>
         <p style="margin: 0 0 10px; text-align: center;">Enter the number of elements to generate:</p>
         <input type="number" id="modal-input" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; width: calc(100% - 20px); margin: 0 auto 20px; display: block; font-size: 1rem; color: #1e293b;">
         <div style="display: flex; justify-content: space-between;">
-            <button onclick="confirmModal()" style="flex: 1; margin-right: 10px; background-color: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
+            <button onclick="confirmModal()" style="flex: 1; margin-right: 10px; background-color: #ff6ec7; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
                 Confirm
             </button>
-            <button onclick="closeModal()" style="flex: 1; background-color: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
+            <button onclick="closeModal()" style="flex: 1; background-color: white; color: #ff6ec7; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; transition: background-color 0.2s;">
                 Cancel
             </button>
         </div>
